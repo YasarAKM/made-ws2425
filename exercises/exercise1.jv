@@ -30,7 +30,7 @@ pipeline PipelineOfAirport {
 
   block LoadAirport oftype SQLiteLoader {
     table: "airports";
-    file: "./airports.sqlite";
+    file: "airports.sqlite";
   } 
 
     AirportPipelineExtractor-> TextFileInterpreterAirport-> CSVInterpreterAirport-> TableInterpreterAirport-> LoadAirport;
