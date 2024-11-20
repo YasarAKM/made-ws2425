@@ -62,13 +62,13 @@ pipeline EconomicDataPipeline {
 
     // Save GDP data into SQLite
     block GDPSaver oftype SQLiteLoader {
-        table: "gdp_data";
-        file: "./country-stats.sqlite";
+       table: "gdpPerCapita";
+       file: "./country-stats.sqlite";
     }
 
     // Save Bond Issuance Share data into SQLite
     block BondSaver oftype SQLiteLoader {
-        table: "bond_data";
+        table: "bondIssuance";
         file: "./country-stats.sqlite";
     }
 }
