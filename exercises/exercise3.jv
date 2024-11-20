@@ -1,0 +1,97 @@
+pipeline EconomicDataPipeline {
+
+    // Data extraction and processing flow
+    DataDownloader
+        -> ExcelInterpreter
+        -> SheetSelector
+        -> HeaderUpdater
+        -> DataRangeSelector
+        -> GDPProcessor
+        -> GDPSaver;
+
+    DataRangeSelector  
+        -> BondProcessor
+        -> BondSaver;
+
+    // Download the dataset from the provided URL
+    block DataDownloader oftype HttpExtractor {
+        url: "https://thedocs.worldbank.org/en/doc/7d852628d96b9411d43e5d36d5dff941-0050062022/original/Graphs-Chapter-5-02082022.xlsx";
+    }
+
+    // Interpret the downloaded Excel file
+    block ExcelInterpreter oftype XLSXInterpreter {}
+
+    // Select the target sheet
+    block SheetSelector oftype SheetPicker {
+        sheetName: "Figure S5.1.2";
+    }
+
+    // Select the specific data range
+    block DataRangeSelector oftype CellRangeSelector {
+        select: range P2:S45;
+    }
+
+    // Update the header columns
+    block HeaderUpdater oftype CellWriter {
+        at: range P2:S2;  
+        write: [
+            "Country Code",
+            "Economy",
+            "GDP per Capita",
+            "Bond Issuance Share"
+        ];
+    }
+
+    // Process GDP-related data
+    block GDPProcessor oftype TableInterpreter {
+        header: true;
+        columns: [
+            "Country Code" oftype CountryCodeValidator,
+            "GDP per Capita" oftype GDPValueValidator
+        ];
+    }
+
+    // Process Bond Issuance Share data
+    block BondProcessor oftype TableInterpreter {
+        header: true;
+        columns: [
+            "Country Code" oftype CountryCodeValidator,
+            "Bond Issuance Share" oftype BondShareValidator
+        ];
+    }
+
+    // Save GDP data into SQLite
+    block GDPSaver oftype SQLiteLoader {
+        table: "gdp_data";
+        file: "./economic_data.sqlite";
+    }
+
+    // Save Bond Issuance Share data into SQLite
+    block BondSaver oftype SQLiteLoader {
+        table: "bond_data";
+        file: "./economic_data.sqlite";
+    }
+}
+
+// Validation Rules
+constraint ValidCode on CountryCodeValidator:
+    value matches /^[A-Za-z]{3}$/;
+
+constraint PositiveValue on GDPValueValidator:
+    value > 0;
+
+constraint ValidRange on BondShareValidator:
+    value >= 0 and value <= 1;
+
+// Validation for Data Columns
+valuetype CountryCodeValidator oftype text {
+    constraints: [ValidCode];
+}
+
+valuetype GDPValueValidator oftype decimal {
+    constraints: [PositiveValue];
+}
+
+valuetype BondShareValidator oftype decimal {
+    constraints: [ValidRange];
+}
