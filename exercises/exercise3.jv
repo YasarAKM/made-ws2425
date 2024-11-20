@@ -83,7 +83,7 @@ constraint PositiveValue on GDPValueValidator:
 constraint ValidRange on BondShareValidator:
     value >= 0 and value <= 1;
 
-// Validation for Data Columns
+// Validation for DataCollumns
 valuetype CountryCodeValidator oftype text {
     constraints: [ValidCode];
 }
