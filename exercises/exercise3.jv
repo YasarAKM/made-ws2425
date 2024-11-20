@@ -69,7 +69,7 @@ pipeline EconomicDataPipeline {
     // Save Bond Issuance Share data into SQLite
     block BondSaver oftype SQLiteLoader {
         table: "bond_data";
-        file: "./economic_data.sqlite";
+        file: "./country-stats.sqlite";
     }
 }
 
