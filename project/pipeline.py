@@ -5,7 +5,7 @@ import geopandas as gpd
 import json
 import os
 
-# Create Database and Connection
+# Create Database & Connection
 DB_FILE = 'obesity_analysis.db'
 if os.path.exists(DB_FILE):
     os.remove(DB_FILE)  # Remove if already exists for fresh start
