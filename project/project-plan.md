@@ -20,7 +20,6 @@ Metadata URL: https://catalog.data.gov/dataset/nutrition-physical-activity-and-o
 
 Data URL: https://data.cdc.gov/api/views/hn4x-zwk7/rows.csv?accessType=DOWNLOAD
 
-Data Type: CSV
 
 Description: This dataset contains information about nutrition, physical activity, and obesity from the Behavioral Risk Factor Surveillance System. It provides valuable insights into obesity-related behaviors, demographics, and health conditions across various U.S. regions.
 
@@ -29,7 +28,6 @@ Metadata URL: https://data-lakecountyil.opendata.arcgis.com/datasets/lakecountyi
 
 Data URL: https://services3.arcgis.com/HESxeTbDliKKvec2/arcgis/rest/services/LakeCounty_Health/FeatureServer/8/query?outFields=*&where=1%3D1&f=geojson
 
-Data Type: GeoJSON
 
 Description: This dataset provides geographic data on obesity rates across different states, which can be used to correlate obesity trends with regional factors like urbanization, socioeconomic status, and access to healthcare.
 
