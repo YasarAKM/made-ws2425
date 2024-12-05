@@ -18,7 +18,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: 3.10  # Adjust based on your project requirements
+        python-version: 3.10  # Use a valid Python version
 
     # Install dependencies
     - name: Install dependencies
@@ -33,4 +33,3 @@ jobs:
     # Run the tests
     - name: Run tests
       run: ./project/tests.sh
-
