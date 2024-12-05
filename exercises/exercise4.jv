@@ -28,7 +28,7 @@ pipeline ClimateAnalysisPipeline {
         path: "/data.csv";
     }
 
-    // Step 4: Load the CSV file as raw text
+    // Step 4: Load the CSV file as raw txt
     block ReadPlainText oftype TextFileInterpreter {}
 
     // Step 5: Parse the text into structured CSV format
