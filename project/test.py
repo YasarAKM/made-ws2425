@@ -1,85 +1,78 @@
-import os
-import subprocess
+import unittest
+from unittest.mock import patch, MagicMock
 import pandas as pd
+from shapely.geometry import Polygon
+from pipeline import (
+    fetch_brfss_data,
+    fetch_geojson_data,
+    clean_geojson_data,
+    clean_brfss_data,
+    merge_datasets,
+)
 
-# Test Case 1: Run the full ETL pipeline and validate the existence of output files
-def test_etl_pipeline_end_to_end():
-    print("Running the data pipeline...")
-    
-    # Run the pipeline using subprocess
-    result = subprocess.run(['python', './project/pipeline.py'], capture_output=True, text=True)
-    
-    # Ensure the pipeline completes successfully
-    if result.returncode != 0:
-        print(f"Error: Pipeline failed with error: {result.stderr}")
-        return False
+class TestPipeline(unittest.TestCase):
+    @patch("pipeline.requests.get")
+    def test_fetch_geojson_data(self, mock_get):
+        """Test fetching GeoJSON dataset."""
+        mock_response = MagicMock()
+        mock_response.json.return_value = {
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {"NAME": "TestState", "Obesity": 30.5},
+                    "geometry": {"type": "Polygon", "coordinates": [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]},
+                }
+            ]
+        }
+        mock_get.return_value = mock_response
 
-    print("Pipeline ran successfully.")
-    
-    # Validate output files exist
-    output_files = [
-        './data/fivethirtyeight_cleaned.csv',
-        './data/jamesqo_cleaned.csv',
-        './data/fivethirtyeight_data.db',
-        './data/jamesqo_data.db'
-    ]
-    
-    for file in output_files:
-        if not os.path.isfile(file):
-            print(f"Error: {file} does not exist.")
-            return False
-        else:
-            print(f"Success: {file} exists.")
-    
-    return True
+        geojson_data = fetch_geojson_data("mock_url")
+        self.assertIn("features", geojson_data)
+        self.assertEqual(len(geojson_data["features"]), 1)
 
-# Test Case 2: Check that the output files are not empty
-def test_file_sizes():
-    print("Checking if the output files are not empty...")
-    
-    # Check if files are not empty
-    if os.path.getsize('./data/fivethirtyeight_cleaned.csv') == 0:
-        print("Error: fivethirtyeight_cleaned.csv is empty")
-        return False
-    if os.path.getsize('./data/jamesqo_cleaned.csv') == 0:
-        print("Error: jamesqo_cleaned.csv is empty")
-        return False
-    
-    print("Test passed: Output files are not empty.")
-    return True
+    def test_clean_geojson_data(self):
+        """Test cleaning GeoJSON data."""
+        geojson_data = {
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {"NAME": "TestState", "Obesity": 30.5},
+                    "geometry": {"type": "Polygon", "coordinates": [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]},
+                }
+            ]
+        }
+        geo_data = clean_geojson_data(geojson_data)
+        self.assertEqual(geo_data.shape[0], 1)
+        self.assertEqual(geo_data.loc[0, "State"], "TestState")
+        self.assertIsInstance(geo_data.loc[0, "geometry"], Polygon)
 
-# Test Case 3: Check for missing values in the cleaned data
-def test_no_missing_values():
-    print("Checking for missing values in cleaned data...")
+    def test_clean_brfss_data(self):
+        """Test cleaning BRFSS data."""
+        brfss_data = pd.DataFrame({
+            "YearStart": [2023, 2023],
+            "LocationDesc": ["TestState", "OtherState"],
+            "Data_Value": [30.5, 25.2],
+        })
+        cleaned_data = clean_brfss_data(brfss_data)
+        self.assertEqual(cleaned_data.shape[0], 2)
+        self.assertEqual(cleaned_data.loc[0, "State"], "TESTSTATE")
 
-    # Load the cleaned data files
-    fivethirtyeight_data = pd.read_csv('./data/fivethirtyeight_cleaned.csv')
-    jamesqo_data = pd.read_csv('./data/jamesqo_cleaned.csv')
-    
-    # Assert that there are no missing values
-    if fivethirtyeight_data.isnull().sum().sum() != 0:
-        print("Error: Missing values in fivethirtyeight data.")
-        return False
-    if jamesqo_data.isnull().sum().sum() != 0:
-        print("Error: Missing values in jamesqo data.")
-        return False
-    
-    print("Test passed: No missing values in the cleaned data.")
-    return True
+    def test_merge_datasets(self):
+        """Test merging GeoJSON and BRFSS datasets."""
+        geo_data = pd.DataFrame({
+            "State": ["TESTSTATE"],
+            "obesity_rate": [30.5],
+            "geometry": [Polygon([[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]])],
+        })
+        brfss_data = pd.DataFrame({
+            "Year": [2023],
+            "State": ["TESTSTATE"],
+            "Obesity_Rate": [30.5],
+        })
+        merged_data = merge_datasets(geo_data, brfss_data)
+        self.assertEqual(merged_data.shape[0], 1)
+        self.assertEqual(merged_data.loc[0, "State"], "TESTSTATE")
+        self.assertEqual(merged_data.loc[0, "obesity_rate"], 30.5)
 
-# Main function to execute all tests
-def run_tests():
-    if not test_etl_pipeline_end_to_end():
-        print("ETL pipeline test failed.")
-        return
-    if not test_file_sizes():
-        print("File size test failed.")
-        return
-    if not test_no_missing_values():
-        print("Missing value test failed.")
-        return
-    
-    print("All tests passed successfully!")
-
-if _name_ == "_main_":
-    run_tests()
+if __name__ == "__main__":
+    unittest.main()
