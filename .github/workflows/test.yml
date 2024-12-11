@@ -3,7 +3,7 @@ name: CI for Project
 on:
   push:
     branches:
-      - main  # Trigger workflow on every push to the main branch
+      - main  # Run CI on every push to the main branch
 
 jobs:
   test:
@@ -24,12 +24,12 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pandas requests shapely unittest
+        pip install pandas requests shapely
 
     # Step 4: Make tests.sh executable
     - name: Make tests.sh executable
       run: chmod +x ./project/tests.sh
 
-    # Step 5: Run the tests
+    # Step 5: Run tests
     - name: Run tests
       run: ./project/tests.sh
