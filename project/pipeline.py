@@ -77,13 +77,13 @@ def main_pipeline():
     brfss_data_cleaned = clean_brfss_data(brfss_data)
     
     # Save cleaned GeoJSON data
-    save_data(geo_data, "./geo_data_cleaned.csv")
+    save_data(geo_data, "geo_data_cleaned.csv")
     
     # Merge datasets
     merged_data = merge_datasets(geo_data, brfss_data_cleaned)
     
     # Save merged data
-    save_data(merged_data, "./merged_data.csv")
+    save_data(merged_data, "merged_data.csv")
 
 # Run the pipeline
 if __name__ == "__main__":
