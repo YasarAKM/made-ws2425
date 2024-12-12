@@ -33,8 +33,13 @@ Description: This dataset provides geographic data on obesity rates across diffe
 
 
 ## Work Packages
-
 -> Data Cleaning and Preprocessing
+-> Created the automated data pipeline with the datasets,
+-> The data report is created and provided as per the requirements,
+-> Automated testing case is prepared with .sh & .py file creating,
+-> One .yml is included in the workflow for CI
+
+
 -> Exploratory Data Analysis (EDA) and Visualization
 -> Geographic Correlation Analysis
 -> Automated Data Pipeline Development
