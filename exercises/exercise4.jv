@@ -98,7 +98,7 @@ pipeline WeatherProcessingPipeline {
 
     // Save the processed data into an SQLite database
     block SaveToDatabase oftype SQLiteLoader {
-        table: "weather_data";
-        file: "./weather_data.sqlite";
+        table: "temperatures";
+        file: "./temperatures.sqlite";
     }
 }
