@@ -1,103 +1,104 @@
-pipeline ClimateAnalysisPipeline {
+pipeline WeatherProcessingPipeline {
 
-    // Define pipeline process flow
-    DownloadZip 
-        -> UnzipArchive
-        -> ChooseCSVFile
-        -> ReadPlainText
-        -> ParseCSVContent
-        -> AdjustBatteryColumn
-        -> RenameHeaders
-        -> ValidateData
-        -> ConvertTemperature
-        -> ConvertBatteryTemperature
+    // Define the sequence of operations for processing weather data
+    DownloadZipArchive 
+        -> UnzipArchive 
+        -> LocateCSVFile 
+        -> ReadRawCSV 
+        -> ParseCSVContent 
+        -> RenameBatteryColumn 
+        -> RenameHeaders 
+        -> ValidateData 
+        -> ConvertTemperatureToFahrenheit 
+        -> ConvertBatteryTemperatureToFahrenheit 
         -> SaveToDatabase;
 
-    // Step 1: Download the ZIP file containing the dataset
-    block DownloadZip oftype HttpExtractor {
+    // Step to download the ZIP file from the specified URL
+    block DownloadZipArchive oftype HttpExtractor {
         url: "https://www.mowesta.com/data/measure/mowesta-dataset-20221107.zip";
     }
 
-    // Step 2: Decompress the ZIP file
+    // Step to extract the contents of the ZIP file
     block UnzipArchive oftype ArchiveInterpreter {
         archiveType: "zip";
     }
 
-    // Step 3: Select the CSV file from the extracted contents
-    block ChooseCSVFile oftype FilePicker {
+    // Step to identify and select the specific CSV file from the archive
+    block LocateCSVFile oftype FilePicker {
         path: "/data.csv";
     }
 
-    // Step 4: Load the CSV file as raw txt
-    block ReadPlainText oftype TextFileInterpreter {}
+    // Step to read the CSV file as plain text
+    block ReadRawCSV oftype TextFileInterpreter {}
 
-    // Step 5: Parse the text into structured CSV format
+    // Step to parse the raw text into a structured table format
     block ParseCSVContent oftype CSVInterpreter {
-        delimiter: ";"; // Specify semicolon as the delimiter
+        delimiter: ";"; // Use semicolon as the delimiter
     }
 
-    // Step 6: Adjust the column header for battery temperature
-    block AdjustBatteryColumn oftype CellWriter {
+    // Rename the battery column
+    block RenameBatteryColumn oftype CellWriter {
         at: cell J1; 
-        write: ["battery_temp"];
+        write: ["battery_temperature"];
     }
 
-    // Step 7: Update all column headers to standard format
+    // Update headers for the dataset
     block RenameHeaders oftype CellWriter {
         at: range A1:E1; 
-        write: ["device_id", "manufacturer", "device_model", "recorded_month", "air_temp"];
+        write: ["id", "manufacturer", "device_model", "recorded_month", "temperature"];
     }
 
-    // Step 8: Validate and define the data schema
+    // Define the expected structure of the dataset and validate column types
     block ValidateData oftype TableInterpreter {
         header: true;
         columns: [
-            "device_id" oftype integer,
+            "id" oftype integer,
             "manufacturer" oftype text,
             "device_model" oftype text,
-            "recorded_month" oftype integer,
-            "air_temp" oftype decimal,
-            "battery_temp" oftype decimal
+            "recorded_month" oftype MonthType,
+            "temperature" oftype decimal,
+            "battery_temperature" oftype decimal
         ];
     }
 
-    // Define transformation logic to convert Celsius to Fahrenheit
-    transform CelsiusToFahrenheit {
-        from celsius_value oftype decimal;
-        to fahrenheit_value oftype decimal;
+    // Define the Celsius to Fahrenheit conversion transformation
+    transform CelsiusToFahrenheitConverter {
+        from Celsius oftype decimal;
+        to Fahrenheit oftype decimal;
 
-        fahrenheit_value: 32 + ((celsius_value * 9) / 5);
+        Fahrenheit: 32 + ((Celsius * 9) / 5);
     }
 
-    // Step 9: Apply the temperature conversion to air temperature column
-    block ConvertTemperature oftype TableTransformer {
-        inputColumns: ["air_temp"];
-        outputColumn: "air_temp";
-        uses: CelsiusToFahrenheit;
+    // Apply the conversion for the temperature column
+    block ConvertTemperatureToFahrenheit oftype TableTransformer {
+        inputColumns: ["temperature"];
+        outputColumn: "temperature";
+        uses: CelsiusToFahrenheitConverter;
     }
 
-    // Step 10: Apply the conversion to battery temperature column
-    block ConvertBatteryTemperature oftype TableTransformer {
-        inputColumns: ["battery_temp"];
-        outputColumn: "battery_temp";
-        uses: CelsiusToFahrenheit;
+    // Apply the conversion for the battery temperature column
+    block ConvertBatteryTemperatureToFahrenheit oftype TableTransformer {
+        inputColumns: ["battery_temperature"];
+        outputColumn: "battery_temperature";
+        uses: CelsiusToFahrenheitConverter;
     }
 
-    // Define valid range for months
+    // Define a constraint for valid months (1–12)
     constraint ValidMonthRange oftype RangeConstraint {
         lowerBound: 1;
-        lowerBoundInclusive: true;
         upperBound: 12;
+        lowerBoundInclusive: true;
         upperBoundInclusive: true;
     }
 
-    valuetype month_value oftype integer {
+    // Create a custom type for the month column with validation
+    valuetype MonthType oftype integer {
         constraints: [ValidMonthRange];
     }
 
-    // Step 11: Save processed data to SQLite database
+    // Save the processed data into an SQLite database
     block SaveToDatabase oftype SQLiteLoader {
-        table: "climate_data";
-        file: "./climate_analysis.sqlite";
+        table: "weather_data";
+        file: "./weather_data.sqlite";
     }
 }
