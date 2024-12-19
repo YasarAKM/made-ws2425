@@ -51,11 +51,11 @@ pipeline WeatherProcessingPipeline {
     // Define the expected structure of the dataset and validate column types
     block ValidateData oftype TableInterpreter {
         header: true;
-        columns: [
-              "id" oftype integer,
+    columns: [
+            "id" oftype integer,
             "producer" oftype text,
             "model" oftype text,
-            "month" oftype month,
+            "month" oftype MonthType,
             "temperature" oftype decimal,
             "battery_temperature" oftype decimal
         ];
