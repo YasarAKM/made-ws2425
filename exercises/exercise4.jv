@@ -96,7 +96,7 @@ pipeline WeatherProcessingPipeline {
         constraints: [ValidMonthRange];
     }
 
-    // Save the processed data into SQLite database
+    // Save the processed data into an SQLite database
     block SaveToDatabase oftype SQLiteLoader {
         table: "temperatures";
         file: "./temperatures.sqlite";
