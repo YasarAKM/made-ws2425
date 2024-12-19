@@ -52,10 +52,10 @@ pipeline WeatherProcessingPipeline {
     block ValidateData oftype TableInterpreter {
         header: true;
         columns: [
-            "id" oftype integer,
-            "manufacturer" oftype text,
-            "device_model" oftype text,
-            "recorded_month" oftype MonthType,
+              "id" oftype integer,
+            "producer" oftype text,
+            "model" oftype text,
+            "month" oftype month,
             "temperature" oftype decimal,
             "battery_temperature" oftype decimal
         ];
