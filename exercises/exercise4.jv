@@ -45,7 +45,7 @@ pipeline WeatherProcessingPipeline {
     // Update headers for the dataset
     block RenameHeaders oftype CellWriter {
         at: range A1:E1; 
-        write: ["id", "manufacturer", "device_model", "recorded_month", "temperature"];
+        write: ["id", "producer", "model", "month", "temperature"];
     }
 
     // Define the expected structure of the dataset and validate column types
